@@ -1,0 +1,2 @@
+- correct: when i delete any item its related expenses must also be removed from people
+- 
