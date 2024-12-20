@@ -1,5 +1,5 @@
 import React from "react";
-
+import axios from 'axios'
 const AddExpenses = ({
   people,
   desc,
@@ -13,12 +13,19 @@ const AddExpenses = ({
   setPayer,
   handleCheckboxChange,
   involved,
-  handleSetToggle
+  handleSetToggle,
 }) => {
   return (
     <div className="m-5 grid grid-cols-2 border-2 border-black rounded-md">
       {/* Expenditure */}
-      <button onClick={handleSetToggle}>Home</button>
+      <div>
+        <button
+          onClick={handleSetToggle}
+          className="bg-black text-white rounded-md"
+        >
+          Home
+        </button>
+      </div>
       <div className="col-span-2 m-2 p-2">
         <div className="p-5 bg-red-300">
           Enter desc:{" "}
@@ -45,6 +52,7 @@ const AddExpenses = ({
           >
             Add expense
           </button>
+          
         </div>
         Equal:
         <input
@@ -77,8 +85,8 @@ const AddExpenses = ({
               {person.name}:{" "}
               <input
                 type="checkbox"
-                checked={involved.includes(person.id)}
-                onChange={() => handleCheckboxChange(person.id)}
+                checked={involved.includes(person.name)}
+                onChange={() => handleCheckboxChange(person.name)}
               />
             </div>
           );

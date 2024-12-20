@@ -1,2 +1,1 @@
-- correct: when i delete any item its related expenses must also be removed from people
-- 
+- update persons array when i add expense or delete any expense using api call.

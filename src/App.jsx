@@ -1,12 +1,10 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
-import People from "./components/People";
-import Expense from "./components/Expense";
 import Items from "./components/Items";
 import Header from "./components/Header";
 import Home from "./components/Home";
-import { Routes, Route } from "react-router";
 import AddExpenses from "./components/AddExpenses";
+import axios from "axios";
 
 //
 function App() {
@@ -18,47 +16,46 @@ function App() {
   const [involved, setInvolved] = useState([]);
   const [toggle, setToggle] = useState(true);
   const [people, setPeople] = useState([
-    {
-      id: 0,
-      name: "Hitesh",
-      amount: 0,
-      spent: 0,
-      toHitesh: 0,
-      toKirti: 0,
-      toVarun: 0,
-    },
-    {
-      id: 1,
-      name: "Kirti",
-      amount: 0,
-      spent: 0,
-      toHitesh: 0,
-      toKirti: 0,
-      toVarun: 0,
-    },
-    {
-      id: 2,
-      name: "Varun",
-      amount: 0,
-      spent: 0,
-      toHitesh: 0,
-      toKirti: 0,
-      toVarun: 0,
-    },
+    // {
+    //   id: 0,
+    //   name: "Hitesh",
+    //   amount: 0,
+    //   spent: 0,
+    //   toHitesh: 0,
+    //   toKirti: 0,
+    //   toVarun: 0,
+    // },
+    // {
+    //   id: 1,
+    //   name: "Kirti",
+    //   amount: 0,
+    //   spent: 0,
+    //   toHitesh: 0,
+    //   toKirti: 0,
+    //   toVarun: 0,
+    // },
+    // {
+    //   id: 2,
+    //   name: "Varun",
+    //   amount: 0,
+    //   spent: 0,
+    //   toHitesh: 0,
+    //   toKirti: 0,
+    //   toVarun: 0,
+    // },
   ]);
 
-  // functions
   function handleDebtSimplification() {
     // write logic here to simplify debts
   }
-  const handleCheckboxChange = (id) => {
+  const handleCheckboxChange = (name) => {
     setInvolved((prev) => {
-      if (prev.includes(id)) {
+      if (prev.includes(name)) {
         // If person is already involved, remove them
-        return prev.filter((p) => p !== id);
+        return prev.filter((p) => p !== name);
       } else {
         // Otherwise, add them to the list
-        return [...prev, id];
+        return [...prev, name];
       }
     });
   };
@@ -87,6 +84,10 @@ function App() {
 
     e.preventDefault();
     setList([...list, { desc, amt, payer, involved, today }]);
+    axios.post('http://localhost:8000/api/items/addItem',{data: {desc, amt, payer, involved, today}}).then((res)=>{
+      console.log("Item Created succesfully")
+    }).catch(()=> console.log("error creating item"))
+
     const updatedPeople = people.map((person) => {
       if (person.name === payer) {
         return {
@@ -96,7 +97,7 @@ function App() {
         };
       } else {
         const payerKey = `to${payer}`;
-        if (involved.includes(person.id)) {
+        if (involved.includes(person.name)) {
           return {
             ...person,
             amount:
@@ -108,42 +109,57 @@ function App() {
         } else return { ...person };
       }
     });
+
+
     setPeople(updatedPeople);
+    axios.put('http://localhost:8000/api/people/updateAll',{data: {updatedPeople}})
+    // axios.post('http://localhost:8000/api/people/')
     handleDebtSimplification();
     setAmt(0);
     setDesc("");
     setInvolved([]);
   }
-  function handleItemDelete(id) {
+  function handleReset(){
+    axios.put('http://localhost:8000/api/people/reset')
+  }
+  function handleItemDelete(item) {
+    console.log(item)
     const updatedPeople = people.map((person) => {
       if (person.name === payer) {
         return {
           ...person,
-          amount: person.amount - (list[id].amt / involved.length - amt),
-          spent: person.spent - 1 * list[id].amt,
+          amount: person.amount - (item.amt / involved.length - amt),
+          spent: person.spent - 1 * item.amt,
         };
       } else {
         // if(person.id in involved){}
-        const payerKey = `to${list[id].payer}`;
-        if (list[id].involved.includes(person.id)) {
+        const payerKey = `to${item.payer}`;
+        if (item.involved.includes(person.name)) {
           return {
             ...person,
             amount:
               person.amount -
-              Math.round((list[id].amt / list[id].involved.length) * 100) / 100,
+              Math.round((item.amt / item.involved.length) * 100) / 100,
             [payerKey]:
               person[payerKey] -
-              Math.round((list[id].amt / list[id].involved.length) * 100) / 100,
+              Math.round((item.amt / item.involved.length) * 100) / 100,
           };
         } else return { ...person };
       }
     });
     setPeople(updatedPeople);
-    const newItems = list.filter((item, ind) => {
-      return id !== ind;
+    axios.put('http://localhost:8000/api/people/updateAll',{data: {updatedPeople}})
+    const newItems = list.filter((itm) => {
+      return item._id !== itm._id;
     });
 
+    
+
     setList(newItems);
+    const itemId = item._id;
+    console.log(itemId)
+    axios.delete('http://localhost:8000/api/items/deleteItem',{data: {id: itemId}})
+
   }
 
   function handleSetToggle() {
@@ -152,6 +168,19 @@ function App() {
       else return true;
     });
   }
+
+  useEffect(() => {
+    axios.get("http://localhost:8000/api/items/allItems").then((res) => {
+      setList(res.data);
+      console.log(res.data);
+    });
+    axios.get("http://localhost:8000/api/people/allPeople").then((res) => {
+      // console.log(res.data)
+      setPeople(res.data);
+    }).catch((err)=>{
+      console.log(err)
+    });
+  }, [list]);
   return (
     <div className="m-5 border-2 border-black rounded-md">
       {/* Expenditure */}
@@ -178,7 +207,7 @@ function App() {
         </div>
       ) : (
         <div className="m-2 p-2">
-          <Home people={people} handleSetToggle={handleSetToggle} />
+          <Home people={people} handleSetToggle={handleSetToggle} handleReset = {handleReset}/>
           <div className="m-2 p-2">
             Items List:
             <div className="bg-blue-200">
@@ -187,38 +216,7 @@ function App() {
           </div>
         </div>
       )}
-      {/* {!toggle ? (
-        <button onClick={handleSetToggle} className="border-2 border-black">
-          Add Expense
-        </button>
-      ) : (
-        <div>
-          <AddExpenses
-            people={people}
-            desc={desc}
-            setDesc={setDesc}
-            amt={amt}
-            setAmt={setAmt}
-            handleAddExpense={handleAddExpense}
-            equal={equal}
-            setEqual={setEqual}
-            payer={payer}
-            setPayer={setPayer}
-            handleCheckboxChange={handleCheckboxChange}
-            involved={involved}
-          />
-        </div>
-      )}
-      {toggle ? (
-        <button onClick={setToggle(false)}>Go to home</button>
-      ) : (
-        <div className="col-span-2 m-2 p-2">
-          Items List:
-          <div className="bg-blue-200">
-            <Items list={list} handleItemDelete={handleItemDelete} />
-          </div>
-        </div>
-      )} */}
+
     </div>
   );
 }
