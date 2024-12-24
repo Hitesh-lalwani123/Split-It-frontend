@@ -1,6 +1,6 @@
 import React from "react";
 
-const Items = ({ list, handleItemDelete }) => {
+const Items = ({ list, handleItemDelete, loading }) => {
   return (
     <div>
       {list.map((item, key) => {
@@ -14,13 +14,13 @@ const Items = ({ list, handleItemDelete }) => {
             </span>
             <button
               onClick={() => handleItemDelete(item)}
-              className="bg-red-600 ml-2 col-span-1 border-x-2"
+              className={`bg-red-600 ml-2 col-span-1 border-x-2 ${loading? "bg-red-400 cursor-not-allowed":""}`}
+              disabled={loading}
             >
               Delete
             </button>
             <div className="bg-yellow-600 ml-2 col-span-1 border-x-2">
               {item.today}
-
             </div>
           </div>
         );

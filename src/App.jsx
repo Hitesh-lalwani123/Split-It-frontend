@@ -12,21 +12,24 @@ import axios from "axios";
 function App() {
   const [list, setList] = useState([]);
   const [people, setPeople] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const baseURL = "https://split-it-backend-1.onrender.com";
   useEffect(() => {
-    axios.get("http://localhost:8000/api/items/allItems").then((res) => {
+    setLoading(true);
+    axios.get(`${baseURL}/api/items/allItems`).then((res) => {
       setList(res.data);
       console.log(res.data);
     });
     axios
-      .get("http://localhost:8000/api/people/allPeople")
+      .get(`${baseURL}/api/people/allPeople`)
       .then((res) => {
         // console.log(res.data)
         setPeople(res.data);
       })
       .catch((err) => {
         console.log(err);
-      });
-    // axios.put('http://localhost:8000/api/people/reset')
+      })
+      .then(() => setLoading(false));
   }, []);
 
   const [desc, setDesc] = useState("");
@@ -77,7 +80,7 @@ function App() {
     }
 
     e.preventDefault();
-
+    setLoading(true);
     const updatedPeople = people.map((person) => {
       if (person.name === payer) {
         return {
@@ -102,15 +105,15 @@ function App() {
       }
     });
     console.log("one");
-    await axios.post("http://localhost:8000/api/items/addItem", {
+    await axios.post(`${baseURL}/api/items/addItem`, {
       data: { desc, amt, payer, involved, today },
     });
     console.log("two");
-    await axios.put("http://localhost:8000/api/people/updateAll", {
+    await axios.put(`${baseURL}/api/people/updateAll`, {
       data: { updatedPeople },
     });
 
-    let res = await axios.get("http://localhost:8000/api/items/allItems");
+    let res = await axios.get(`${baseURL}/api/items/allItems`);
     setList(res.data);
     console.log("three");
 
@@ -118,20 +121,17 @@ function App() {
     handleDebtSimplification();
 
     console.log("four");
-    let ppl = await axios.get("http://localhost:8000/api/people/allPeople");
+    let ppl = await axios.get(`${baseURL}/api/people/allPeople`);
 
     setPeople(ppl.data);
 
     setAmt(0);
     setDesc("");
     setInvolved([]);
-
-    // console.log(newItem.data);
-    // console.log("Item Created succesfully");
-    // setList([...list, newItem.data]);
+    setLoading(false);
   }
   function handleReset() {
-    axios.put("http://localhost:8000/api/people/reset");
+    axios.put(`${baseURL}/api/people/reset`);
   }
   async function handleItemDelete(item) {
     const updatedPeople = people.map((person) => {
@@ -157,20 +157,21 @@ function App() {
         } else return { ...person };
       }
     });
-
+    setLoading(true);
     const itemId = item._id;
-    await axios.delete("http://localhost:8000/api/items/deleteItem", {
+    await axios.delete(`${baseURL}/api/items/deleteItem`, {
       data: { id: itemId },
     });
 
-    await axios.put("http://localhost:8000/api/people/updateAll", {
+    await axios.put(`${baseURL}/api/people/updateAll`, {
       data: { updatedPeople },
     });
 
-    let itm = await axios.get("http://localhost:8000/api/items/allItems");
+    let itm = await axios.get(`${baseURL}/api/items/allItems`);
     setList(itm.data);
-    let ppl = await axios.get("http://localhost:8000/api/people/allPeople");
+    let ppl = await axios.get(`${baseURL}/api/people/allPeople`);
     setPeople(ppl.data);
+    setLoading(false);
   }
 
   function handleSetToggle() {
@@ -182,9 +183,12 @@ function App() {
   return (
     <div className="m-5 border-2 border-black rounded-md">
       {/* Expenditure */}
+
       <div>
         <Header />
       </div>
+
+      {loading ? <div className="loading">Page is loading....</div> : ""}
       {!toggle ? (
         <div>
           <AddExpenses
@@ -203,6 +207,7 @@ function App() {
             handleSetToggle={handleSetToggle}
             item={item}
             setItem={setItem}
+            loading={loading}
           />
         </div>
       ) : (
@@ -211,7 +216,11 @@ function App() {
           <div className="m-2 p-2">
             Items List:
             <div className="bg-blue-200">
-              <Items list={list} handleItemDelete={handleItemDelete} />
+              <Items
+                list={list}
+                handleItemDelete={handleItemDelete}
+                loading={loading}
+              />
             </div>
           </div>
         </div>

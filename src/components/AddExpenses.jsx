@@ -16,6 +16,7 @@ const AddExpenses = ({
   handleSetToggle,
   item,
   setItem,
+  loading
 }) => {
   return (
     <div className="m-5 grid grid-cols-2 border-2 border-black rounded-md">
@@ -42,8 +43,9 @@ const AddExpenses = ({
             className="px-2 bg-slate-900 text-white"
           />
           <button
-            className="p-2 bg-black text-white rounded-md m-2"
+            className={`p-2 bg-black text-white rounded-md m-2 ${loading?"bg-slate-600 cursor-wait":""}`}
             onClick={(e) => handleAddExpense(e)}
+            disabled = {loading}
           >
             Add expense
           </button>
