@@ -1,70 +1,57 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
-import People from "./components/People";
-import Expense from "./components/Expense";
 import Items from "./components/Items";
 import Header from "./components/Header";
 import Home from "./components/Home";
-import { Routes, Route } from "react-router";
 import AddExpenses from "./components/AddExpenses";
+// import handleCheckboxChange from "../handlers/handleCheckboxChange";
+import handleDebtSimplification from "../handlers/debtSimplification";
+import axios from "axios";
 
 //
 function App() {
   const [list, setList] = useState([]);
+  const [people, setPeople] = useState([]);
+  useEffect(() => {
+    axios.get("http://localhost:8000/api/items/allItems").then((res) => {
+      setList(res.data);
+      console.log(res.data);
+    });
+    axios
+      .get("http://localhost:8000/api/people/allPeople")
+      .then((res) => {
+        // console.log(res.data)
+        setPeople(res.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    // axios.put('http://localhost:8000/api/people/reset')
+  }, []);
+
   const [desc, setDesc] = useState("");
   const [amt, setAmt] = useState(0);
   const [payer, setPayer] = useState(null);
   const [equal, setEqual] = useState(true);
   const [involved, setInvolved] = useState([]);
   const [toggle, setToggle] = useState(true);
-  const [people, setPeople] = useState([
-    {
-      id: 0,
-      name: "Hitesh",
-      amount: 0,
-      spent: 0,
-      toHitesh: 0,
-      toKirti: 0,
-      toVarun: 0,
-    },
-    {
-      id: 1,
-      name: "Kirti",
-      amount: 0,
-      spent: 0,
-      toHitesh: 0,
-      toKirti: 0,
-      toVarun: 0,
-    },
-    {
-      id: 2,
-      name: "Varun",
-      amount: 0,
-      spent: 0,
-      toHitesh: 0,
-      toKirti: 0,
-      toVarun: 0,
-    },
-  ]);
+  const [item, setItem] = useState({});
+  const [person, setPerson] = useState({});
 
   // functions
-  function handleDebtSimplification() {
-    // write logic here to simplify debts
-  }
-  const handleCheckboxChange = (id) => {
+  const handleCheckboxChange = (name) => {
     setInvolved((prev) => {
-      if (prev.includes(id)) {
+      if (prev.includes(name)) {
         // If person is already involved, remove them
-        return prev.filter((p) => p !== id);
+        return prev.filter((p) => p !== name);
       } else {
         // Otherwise, add them to the list
-        return [...prev, id];
+        return [...prev, name];
       }
     });
   };
 
-  function handleUpdateExpense(e) {}
-  function handleAddExpense(e) {
+  async function handleAddExpense(e) {
     var today = new Date();
     var dd = String(today.getDate()).padStart(2, "0");
     var mm = String(today.getMonth() + 1).padStart(2, "0");
@@ -84,19 +71,25 @@ function App() {
       alert("select payer");
       return;
     }
+    if (amt === 0 || amt === "") {
+      alert("please enter some amount");
+      return;
+    }
 
     e.preventDefault();
-    setList([...list, { desc, amt, payer, involved, today }]);
+
     const updatedPeople = people.map((person) => {
       if (person.name === payer) {
         return {
           ...person,
-          amount: person.amount + (amt / involved.length - amt),
+          amount:
+            person.amount +
+            Math.round((amt / involved.length - amt) * 100) / 100,
           spent: person.spent + 1 * amt,
         };
       } else {
         const payerKey = `to${payer}`;
-        if (involved.includes(person.id)) {
+        if (involved.includes(person.name)) {
           return {
             ...person,
             amount:
@@ -108,42 +101,76 @@ function App() {
         } else return { ...person };
       }
     });
-    setPeople(updatedPeople);
+    console.log("one");
+    await axios.post("http://localhost:8000/api/items/addItem", {
+      data: { desc, amt, payer, involved, today },
+    });
+    console.log("two");
+    await axios.put("http://localhost:8000/api/people/updateAll", {
+      data: { updatedPeople },
+    });
+
+    let res = await axios.get("http://localhost:8000/api/items/allItems");
+    setList(res.data);
+    console.log("three");
+
+    // setPeople(updatedPeople);
     handleDebtSimplification();
+
+    console.log("four");
+    let ppl = await axios.get("http://localhost:8000/api/people/allPeople");
+
+    setPeople(ppl.data);
+
     setAmt(0);
     setDesc("");
     setInvolved([]);
+
+    // console.log(newItem.data);
+    // console.log("Item Created succesfully");
+    // setList([...list, newItem.data]);
   }
-  function handleItemDelete(id) {
+  function handleReset() {
+    axios.put("http://localhost:8000/api/people/reset");
+  }
+  async function handleItemDelete(item) {
     const updatedPeople = people.map((person) => {
-      if (person.name === payer) {
+      if (person.name === item.payer) {
         return {
           ...person,
-          amount: person.amount - (list[id].amt / involved.length - amt),
-          spent: person.spent - 1 * list[id].amt,
+          amount: person.amount - (item.amt / item.involved.length - item.amt),
+          spent: person.spent - 1 * item.amt,
         };
       } else {
         // if(person.id in involved){}
-        const payerKey = `to${list[id].payer}`;
-        if (list[id].involved.includes(person.id)) {
+        const payerKey = `to${item.payer}`;
+        if (item.involved.includes(person.name)) {
           return {
             ...person,
             amount:
               person.amount -
-              Math.round((list[id].amt / list[id].involved.length) * 100) / 100,
+              Math.round((item.amt / item.involved.length) * 100) / 100,
             [payerKey]:
               person[payerKey] -
-              Math.round((list[id].amt / list[id].involved.length) * 100) / 100,
+              Math.round((item.amt / item.involved.length) * 100) / 100,
           };
         } else return { ...person };
       }
     });
-    setPeople(updatedPeople);
-    const newItems = list.filter((item, ind) => {
-      return id !== ind;
+
+    const itemId = item._id;
+    await axios.delete("http://localhost:8000/api/items/deleteItem", {
+      data: { id: itemId },
     });
 
-    setList(newItems);
+    await axios.put("http://localhost:8000/api/people/updateAll", {
+      data: { updatedPeople },
+    });
+
+    let itm = await axios.get("http://localhost:8000/api/items/allItems");
+    setList(itm.data);
+    let ppl = await axios.get("http://localhost:8000/api/people/allPeople");
+    setPeople(ppl.data);
   }
 
   function handleSetToggle() {
@@ -174,6 +201,8 @@ function App() {
             handleCheckboxChange={handleCheckboxChange}
             involved={involved}
             handleSetToggle={handleSetToggle}
+            item={item}
+            setItem={setItem}
           />
         </div>
       ) : (
@@ -187,38 +216,8 @@ function App() {
           </div>
         </div>
       )}
-      {/* {!toggle ? (
-        <button onClick={handleSetToggle} className="border-2 border-black">
-          Add Expense
-        </button>
-      ) : (
-        <div>
-          <AddExpenses
-            people={people}
-            desc={desc}
-            setDesc={setDesc}
-            amt={amt}
-            setAmt={setAmt}
-            handleAddExpense={handleAddExpense}
-            equal={equal}
-            setEqual={setEqual}
-            payer={payer}
-            setPayer={setPayer}
-            handleCheckboxChange={handleCheckboxChange}
-            involved={involved}
-          />
-        </div>
-      )}
-      {toggle ? (
-        <button onClick={setToggle(false)}>Go to home</button>
-      ) : (
-        <div className="col-span-2 m-2 p-2">
-          Items List:
-          <div className="bg-blue-200">
-            <Items list={list} handleItemDelete={handleItemDelete} />
-          </div>
-        </div>
-      )} */}
+
+      <button onClick={handleReset}>Reset</button>
     </div>
   );
 }

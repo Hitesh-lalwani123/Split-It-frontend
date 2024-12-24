@@ -13,7 +13,7 @@ const Items = ({ list, handleItemDelete }) => {
               Rs. {item.amt}
             </span>
             <button
-              onClick={() => handleItemDelete(key)}
+              onClick={() => handleItemDelete(item)}
               className="bg-red-600 ml-2 col-span-1 border-x-2"
             >
               Delete

@@ -4,9 +4,9 @@ import Expense from "./Expense";
 import People from "./People";
 const Home = ({ people,handleSetToggle }) => {
   return (
-    <div>
+    <div className="border-2 border-black rounded-md">
       <div className="col-span-1 m-2 p-2">
-        <button onClick={handleSetToggle}>Add Expense</button>
+        <button onClick={handleSetToggle} className="bg-black text-white rounded-sm p-1 m-1">Add Expense</button>
         <div className="bg-slate-200">
           <Expense people={people} />
         </div>

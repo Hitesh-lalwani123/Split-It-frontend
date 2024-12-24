@@ -13,12 +13,14 @@ const AddExpenses = ({
   setPayer,
   handleCheckboxChange,
   involved,
-  handleSetToggle
+  handleSetToggle,
+  item,
+  setItem,
 }) => {
   return (
     <div className="m-5 grid grid-cols-2 border-2 border-black rounded-md">
       {/* Expenditure */}
-      <button onClick={handleSetToggle}>Home</button>
+      <button onClick={handleSetToggle} className="bg-black text-white col-span-1 w-1/2 m-1 p-1 rounded-md">Home</button>
       <div className="col-span-2 m-2 p-2">
         <div className="p-5 bg-red-300">
           Enter desc:{" "}
@@ -77,8 +79,8 @@ const AddExpenses = ({
               {person.name}:{" "}
               <input
                 type="checkbox"
-                checked={involved.includes(person.id)}
-                onChange={() => handleCheckboxChange(person.id)}
+                checked={involved.includes(person.name)}
+                onChange={() => handleCheckboxChange(person.name)}
               />
             </div>
           );
