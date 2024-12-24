@@ -226,7 +226,7 @@ function App() {
         </div>
       )}
 
-      <button onClick={handleReset}>Reset</button>
+      {/* <button onClick={handleReset}>Reset</button> */}
     </div>
   );
 }
