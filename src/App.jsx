@@ -7,13 +7,18 @@ import AddExpenses from "./components/AddExpenses";
 // import handleCheckboxChange from "../handlers/handleCheckboxChange";
 import handleDebtSimplification from "../handlers/debtSimplification";
 import axios from "axios";
+import {
+  PrimaryButtonTemplate,
+  SecondaryButtonTemplate,
+} from "./templates/ButtonTemplate";
 
 //
 function App() {
   const [list, setList] = useState([]);
   const [people, setPeople] = useState([]);
+
   const [loading, setLoading] = useState(false);
-  const baseURL = "https://split-it-backend-1.onrender.com";
+  const baseURL = "https://split-it-backend-v2.onrender.com";
   useEffect(() => {
     setLoading(true);
     axios.get(`${baseURL}/api/items/allItems`).then((res) => {
@@ -188,7 +193,11 @@ function App() {
         <Header />
       </div>
 
-      {loading ? <div className="loading">Page is loading....</div> : ""}
+      {loading ? (
+        <div className="loading">Page is loading....</div>
+      ) : (
+        <div className=" bg-transparent h-10"> </div>
+      )}
       {!toggle ? (
         <div>
           <AddExpenses
@@ -215,7 +224,7 @@ function App() {
           <Home people={people} handleSetToggle={handleSetToggle} />
           <div className="m-2 p-2">
             Items List:
-            <div className="bg-blue-200">
+            <div>
               <Items
                 list={list}
                 handleItemDelete={handleItemDelete}
@@ -226,7 +235,9 @@ function App() {
         </div>
       )}
 
-      {/* <button onClick={handleReset}>Reset</button> */}
+      <SecondaryButtonTemplate>
+        <button onClick={handleReset}>Reset</button>
+      </SecondaryButtonTemplate>
     </div>
   );
 }
