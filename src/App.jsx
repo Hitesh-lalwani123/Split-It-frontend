@@ -235,9 +235,9 @@ function App() {
         </div>
       )}
 
-      <SecondaryButtonTemplate>
+      {/* <SecondaryButtonTemplate>
         <button onClick={handleReset}>Reset</button>
-      </SecondaryButtonTemplate>
+      </SecondaryButtonTemplate> */}
     </div>
   );
 }
