@@ -7,15 +7,20 @@ import AddExpenses from "./components/AddExpenses";
 import Dashboard from "./components/Dashboard";
 import { BrowserRouter, Routes, Route } from "react-router";
 import handleDebtSimplification from "../handlers/debtSimplification";
+import { SecondaryButtonTemplate } from "./templates/ButtonTemplate";
 import axios from "axios";
+import Loading from "./components/Loading";
 //
 function App() {
   const [list, setList] = useState([]);
   const [people, setPeople] = useState([]);
   const [backendup, setBackendup] = useState(1);
 
+  const [allShayaris, setAllShayaris] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const baseURL = "https://split-it-backend-v2.onrender.com";
+  // const baseURL = "http://localhost:8000";
   useEffect(() => {
     async function testDB() {
       try {
@@ -39,11 +44,15 @@ function App() {
           console.log(err);
         })
         .then(() => setLoading(false));
+      axios.get(`${baseURL}/api/shayari/getAll`).then((res) => {
+        setAllShayaris(res.data);
+      });
     }
 
     testDB();
   }, []);
 
+  const [shayari, setShayari] = useState("");
   const [desc, setDesc] = useState("");
   const [amt, setAmt] = useState(0);
   const [payer, setPayer] = useState(null);
@@ -142,6 +151,19 @@ function App() {
   function handleReset() {
     axios.put(`${baseURL}/api/people/reset`);
   }
+
+  async function handleSubmitShayari(e) {
+    await axios
+      .post(`${baseURL}/api/shayari/create`, {
+        data: { title: shayari, by: "admin" },
+      })
+      .then((res) => {
+        alert(res.data.message);
+      });
+    let allshayaris = await axios.get(`${baseURL}/api/shayari/getAll`);
+    setAllShayaris(allshayaris);
+    setShayari("");
+  }
   async function handleItemDelete(item) {
     const updatedPeople = people.map((person) => {
       if (person.name === item.payer) {
@@ -192,6 +214,9 @@ function App() {
   return (
     <div className="m-5 border-2 border-black rounded-md">
       {/* Expenditure */}
+
+      <Loading allShayaris={allShayaris} />
+
       {backendup === 3 ? (
         <div>Backend is down. Kindly Contact the Admin!!</div>
       ) : backendup === 1 ? (
@@ -249,6 +274,19 @@ function App() {
       </SecondaryButtonTemplate> */}
         </>
       )}
+      <div>
+        Bring out the shayar inside you!!
+        <textarea
+          placeholder="Enter your Shayari"
+          className="border-2 border-black shadow-md shadow-black px-2"
+          type="text"
+          value={shayari}
+          onChange={(e) => setShayari(e.target.value)}
+        />
+      </div>
+      <SecondaryButtonTemplate>
+        <button onClick={handleSubmitShayari}>Submit</button>
+      </SecondaryButtonTemplate>
     </div>
   );
 }
