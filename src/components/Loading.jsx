@@ -21,10 +21,10 @@ const colors = [
   "bg-sky-700",
   "bg-cyan-700",
 ];
-const Loading = ({allShayaris}) => {
+const Loading = ({allShayaris,number}) => {
   const [curr, setcurr] = useState('bg-green-800');
-  const number = Math.floor(Math.random() * 10);
-  const shayaris = (allShayaris)
+//   const shayaris = (allShayaris)
+  console.log(number)
   useEffect(()=>{
     setcurr(colors[number%8])
   },[])
