@@ -11,6 +11,7 @@ import { SecondaryButtonTemplate } from "./templates/ButtonTemplate";
 import axios from "axios";
 import Loading from "./components/Loading";
 //
+const number = Math.floor(Math.random() * 10);
 function App() {
   const [list, setList] = useState([]);
   const [people, setPeople] = useState([]);
@@ -215,7 +216,7 @@ function App() {
     <div className="m-5 border-2 border-black rounded-md">
       {/* Expenditure */}
 
-      <Loading allShayaris={allShayaris} />
+      <Loading allShayaris={allShayaris} number={number} />
 
       {backendup === 3 ? (
         <div>Backend is down. Kindly Contact the Admin!!</div>
