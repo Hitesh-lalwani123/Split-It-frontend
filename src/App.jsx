@@ -4,37 +4,44 @@ import Items from "./components/Items";
 import Header from "./components/Header";
 import Home from "./components/Home";
 import AddExpenses from "./components/AddExpenses";
-// import handleCheckboxChange from "../handlers/handleCheckboxChange";
+import Dashboard from "./components/Dashboard";
+import { BrowserRouter, Routes, Route } from "react-router";
 import handleDebtSimplification from "../handlers/debtSimplification";
 import axios from "axios";
-import {
-  PrimaryButtonTemplate,
-  SecondaryButtonTemplate,
-} from "./templates/ButtonTemplate";
-
 //
 function App() {
   const [list, setList] = useState([]);
   const [people, setPeople] = useState([]);
+  const [backendup, setBackendup] = useState(1);
 
   const [loading, setLoading] = useState(false);
   const baseURL = "https://split-it-backend-v2.onrender.com";
   useEffect(() => {
-    setLoading(true);
-    axios.get(`${baseURL}/api/items/allItems`).then((res) => {
-      setList(res.data);
-      console.log(res.data);
-    });
-    axios
-      .get(`${baseURL}/api/people/allPeople`)
-      .then((res) => {
-        // console.log(res.data)
-        setPeople(res.data);
-      })
-      .catch((err) => {
-        console.log(err);
-      })
-      .then(() => setLoading(false));
+    async function testDB() {
+      try {
+        let res = await axios.get(baseURL);
+        if (res.ok) console.log(res);
+        setBackendup(2);
+      } catch (error) {
+        console.log("backend down");
+        setBackendup(3);
+      }
+      setLoading(true);
+      axios.get(`${baseURL}/api/items/allItems`).then((res) => {
+        setList(res.data);
+      });
+      axios
+        .get(`${baseURL}/api/people/allPeople`)
+        .then((res) => {
+          setPeople(res.data);
+        })
+        .catch((err) => {
+          console.log(err);
+        })
+        .then(() => setLoading(false));
+    }
+
+    testDB();
   }, []);
 
   const [desc, setDesc] = useState("");
@@ -44,7 +51,7 @@ function App() {
   const [involved, setInvolved] = useState([]);
   const [toggle, setToggle] = useState(true);
   const [item, setItem] = useState({});
-  const [person, setPerson] = useState({});
+  const [person, setPerson] = useState("Hitesh");
 
   // functions
   const handleCheckboxChange = (name) => {
@@ -109,23 +116,20 @@ function App() {
         } else return { ...person };
       }
     });
-    console.log("one");
+
     await axios.post(`${baseURL}/api/items/addItem`, {
       data: { desc, amt, payer, involved, today },
     });
-    console.log("two");
     await axios.put(`${baseURL}/api/people/updateAll`, {
       data: { updatedPeople },
     });
 
     let res = await axios.get(`${baseURL}/api/items/allItems`);
     setList(res.data);
-    console.log("three");
 
     // setPeople(updatedPeople);
     handleDebtSimplification();
 
-    console.log("four");
     let ppl = await axios.get(`${baseURL}/api/people/allPeople`);
 
     setPeople(ppl.data);
@@ -188,56 +192,63 @@ function App() {
   return (
     <div className="m-5 border-2 border-black rounded-md">
       {/* Expenditure */}
-
-      <div>
-        <Header />
-      </div>
-
-      {loading ? (
-        <div className="loading">Page is loading....</div>
+      {backendup === 3 ? (
+        <div>Backend is down. Kindly Contact the Admin!!</div>
+      ) : backendup === 1 ? (
+        <div> Backend is Loading...</div>
       ) : (
-        <div className=" bg-transparent h-10"> </div>
-      )}
-      {!toggle ? (
-        <div>
-          <AddExpenses
-            people={people}
-            desc={desc}
-            setDesc={setDesc}
-            amt={amt}
-            setAmt={setAmt}
-            handleAddExpense={handleAddExpense}
-            equal={equal}
-            setEqual={setEqual}
-            payer={payer}
-            setPayer={setPayer}
-            handleCheckboxChange={handleCheckboxChange}
-            involved={involved}
-            handleSetToggle={handleSetToggle}
-            item={item}
-            setItem={setItem}
-            loading={loading}
-          />
-        </div>
-      ) : (
-        <div className="m-2 p-2">
-          <Home people={people} handleSetToggle={handleSetToggle} />
-          <div className="m-2 p-2">
-            Items List:
+        <>
+          <div>
+            <Header />
+          </div>
+
+          {loading ? (
+            <div className="loading">Page is loading....</div>
+          ) : (
+            <div className=" bg-transparent h-10"> </div>
+          )}
+          {!toggle ? (
             <div>
-              <Items
-                list={list}
-                handleItemDelete={handleItemDelete}
+              <AddExpenses
+                people={people}
+                desc={desc}
+                setDesc={setDesc}
+                amt={amt}
+                setAmt={setAmt}
+                handleAddExpense={handleAddExpense}
+                equal={equal}
+                setEqual={setEqual}
+                payer={payer}
+                setPayer={setPayer}
+                handleCheckboxChange={handleCheckboxChange}
+                involved={involved}
+                handleSetToggle={handleSetToggle}
+                item={item}
+                setItem={setItem}
                 loading={loading}
               />
             </div>
-          </div>
-        </div>
-      )}
+          ) : (
+            <div className="m-2 p-2">
+              <Home people={people} handleSetToggle={handleSetToggle} />
+              <div className="m-2 p-2">
+                Items List:
+                <div>
+                  <Items
+                    list={list}
+                    handleItemDelete={handleItemDelete}
+                    loading={loading}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
-      {/* <SecondaryButtonTemplate>
+          {/* <SecondaryButtonTemplate>
         <button onClick={handleReset}>Reset</button>
       </SecondaryButtonTemplate> */}
+        </>
+      )}
     </div>
   );
 }
